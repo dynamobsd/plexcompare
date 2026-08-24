@@ -90,7 +90,9 @@ et crée la release GitHub. Chrome fera le reste. Pour forcer tout de suite :
 
 Exécuter `deploiement/installer-plexcompare.reg` en administrateur, Chrome
 fermé. Le fichier écrit une seule clé de politique dans `HKEY_LOCAL_MACHINE`
-qui dit à Chrome d'installer l'extension et où chercher ses mises à jour.
+qui dit à Chrome d'installer l'extension (`force_installed`) et où chercher
+ses mises à jour. Ne jamais installer le `.crx` par glisser-déposer : Chrome
+bloque définitivement les extensions installées ainsi hors du Web Store.
 `desinstaller-plexcompare.reg` annule l'opération.
 
 Cette voie exige que `updates.xml` et le `.crx` soient **accessibles

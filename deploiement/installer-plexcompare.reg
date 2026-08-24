@@ -9,11 +9,13 @@ Windows Registry Editor Version 5.00
 ; A executer en tant qu administrateur (clic droit > Fusionner), sur
 ; chaque ordinateur. Ferme Chrome completement avant, puis rouvre-le.
 ;
-; installation_mode = normal_installed : Chrome installe l extension tout
-; seul et la maintient a jour, mais tu peux encore la desactiver toi-meme.
+; installation_mode = force_installed : Chrome installe l extension, la garde
+; activee et la maintient a jour. C est le seul mode fiable pour une
+; extension hebergee hors du Chrome Web Store : avec normal_installed,
+; Chrome retient une suppression manuelle et refuse de reinstaller.
 ; Pour tout retirer, execute desinstaller-plexcompare.reg.
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome\ExtensionSettings\lfibmbaifoddfiaophkjbhfgeenialjc]
-"installation_mode"="normal_installed"
+"installation_mode"="force_installed"
 "update_url"="https://dynamobsd.github.io/plexcompare/updates.xml"
 "toolbar_pin"="force_pinned"
