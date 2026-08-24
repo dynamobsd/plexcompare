@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "PlexCompare — Rentabilité Centris",
+  "version": "1.0.0",
+  "description": "Affiche automatiquement la rentabilité (cashflow, MRB, coût réel d'habitation) sur les fiches de plex Centris et envoie vos coups de cœur vers votre liste partagée.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://www.centris.ca/*",
+    "https://centris.ca/*",
+    "https://script.google.com/*",
+    "https://script.googleusercontent.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://www.centris.ca/*", "https://centris.ca/*"],
+      "js": ["content.js"],
+      "css": ["panel.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "PlexCompare — vos hypothèses"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

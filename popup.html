@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    :root {
+      --bg: #0f2231; --bg2: #16303f; --ink: #eaf2f6; --dim: #9db4c0;
+      --line: #23404f; --accent: #ffb454;
+    }
+    * { box-sizing: border-box; }
+    body {
+      width: 320px; margin: 0; padding: 14px;
+      background: var(--bg); color: var(--ink);
+      font: 13px/1.4 -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    h1 { font-size: 15px; margin: 0 0 2px; color: var(--accent); }
+    p.sub { margin: 0 0 12px; color: var(--dim); font-size: 12px; }
+    label { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 0; color: var(--dim); }
+    input[type="text"], input[type="number"] {
+      width: 110px; background: var(--bg2); border: 1px solid var(--line);
+      border-radius: 8px; color: var(--ink); padding: 5px 8px; text-align: right;
+    }
+    input:focus { outline: none; border-color: var(--accent); }
+    .full { flex-direction: column; align-items: stretch; }
+    .full input { width: 100%; text-align: left; }
+    .check { justify-content: flex-start; gap: 8px; color: var(--ink); }
+    hr { border: none; border-top: 1px solid var(--line); margin: 10px 0; }
+    button {
+      width: 100%; margin-top: 10px; padding: 9px;
+      background: var(--accent); color: #201200; border: none;
+      border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer;
+    }
+    #ok { color: #5fd39a; font-size: 12px; min-height: 15px; display: block; margin-top: 6px; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>PlexCompare</h1>
+  <p class="sub">Vos hypothèses — appliquées à toutes les fiches.</p>
+
+  <label>Taux hypothécaire (%) <input type="number" step="0.01" id="tauxHypo"></label>
+  <label>Amortissement (ans) <input type="number" id="amortissement"></label>
+  <label>Entretien (% des revenus) <input type="number" step="0.5" id="entretienPct"></label>
+  <label>Vacance (% des revenus) <input type="number" step="0.5" id="vacancePct"></label>
+  <label>Assurances ($/an) <input type="number" id="assurancesAn"></label>
+  <label>Déneigement, divers ($/an) <input type="number" id="deneigementAn"></label>
+  <label>Loyer de votre unité ($/mois) <input type="number" id="loyerUniteOccupee"></label>
+  <label class="check"><input type="checkbox" id="villeMontreal"> Paliers de Montréal (taxe de bienvenue)</label>
+
+  <hr>
+
+  <label class="full">URL du script Google (liste partagée)
+    <input type="text" id="sheetUrl" placeholder="https://script.google.com/macros/s/…/exec">
+  </label>
+
+  <button id="save">Enregistrer</button>
+  <button id="dash" style="background:var(--bg2);color:var(--ink);border:1px solid var(--line);">📊 Ouvrir notre tableau de bord</button>
+  <span id="ok"></span>
+
+  <script src="popup.js"></script>
+</body>
+</html>
