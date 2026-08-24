@@ -56,3 +56,42 @@ Les seuils fiscaux sont regroupés en haut de `finance.js` :
 
 Outil d'aide à la décision, pas un conseil financier. Les chiffres finaux doivent être
 validés par un courtier hypothécaire et un inspecteur en bâtiment.
+
+## Distribution et mise à jour automatique
+
+L'extension est signée et distribuée hors du Chrome Web Store, via GitHub.
+Chrome interroge `updates.xml` environ toutes les 5 heures et installe seul
+toute version supérieure à celle en place.
+
+| Élément | Valeur |
+|---|---|
+| ID de l'extension | `lfibmbaifoddfiaophkjbhfgeenialjc` |
+| Manifeste de mise à jour | `https://dynamobsd.github.io/plexcompare/updates.xml` |
+| Paquets | Releases GitHub, tag `v<version>` |
+| Clé de signature | `~/.plexcompare-signing/plexcompare.pem` — **hors du dépôt, à sauvegarder** |
+
+> Si la clé est perdue, l'ID de l'extension change : il faut refaire la
+> politique de registre et réinstaller sur chaque poste. Les réglages
+> enregistrés dans `chrome.storage.sync` seraient perdus avec elle.
+
+### Publier une nouvelle version
+
+```powershell
+# 1. Monter le numéro de version dans manifest.json
+# 2. Vérifier que tests.html passe au vert
+.\build.ps1 -Publier
+```
+
+Le script fabrique le `.crx` signé, régénère `updates.xml`, pousse le dépôt
+et crée la release GitHub. Chrome fera le reste. Pour forcer tout de suite :
+`chrome://extensions` → **Tout mettre à jour**.
+
+### Installer sur un poste
+
+Exécuter `deploiement/installer-plexcompare.reg` en administrateur, Chrome
+fermé. Le fichier écrit une seule clé de politique dans `HKEY_LOCAL_MACHINE`
+qui dit à Chrome d'installer l'extension et où chercher ses mises à jour.
+`desinstaller-plexcompare.reg` annule l'opération.
+
+Cette voie exige que `updates.xml` et le `.crx` soient **accessibles
+publiquement** : Chrome ne peut pas s'authentifier auprès d'un dépôt privé.

@@ -3,7 +3,11 @@
   "name": "PlexCompare — Rentabilité Centris",
   "version": "1.1.0",
   "description": "Affiche automatiquement la rentabilité (cashflow, MRB, coût réel d'habitation) sur les fiches de plex Centris et envoie vos coups de cœur vers votre liste partagée.",
-  "permissions": ["storage"],
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAq47QCNp3hw0JGAeOvaUnwVDPR7b9yQAA0rvhl3uqnd+ePkR3wNyoggG9acZN0130jAnDf/cRZUlZDgUpA3yTdxC/BBEjQ8qE9mlMTTWq1Ki9GmSYfpy8o14+NpQcSZV6iHVfsxHR9SOV0W56Uu50skXNpNVPBUddzY+PRfs8LcqGWdxcZluyzvd3YGYz8rJqJvWo4adg7P9Ho5YJ7wXjCPFUnBDL3tco+8dJWTTY0N9Lox+ly8N4XqxZgiYIkieIgvSo2NfpongEEnQwAf2gxiujHc5X7Kq2gCKTkOSyY/1qq2tfAiZ9K7DAa7JRC9hRiUTcvKlzFH3j1W5jNLQUQwIDAQAB",
+  "update_url": "https://dynamobsd.github.io/plexcompare/updates.xml",
+  "permissions": [
+    "storage"
+  ],
   "host_permissions": [
     "https://www.centris.ca/*",
     "https://centris.ca/*",
@@ -15,9 +19,18 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://www.centris.ca/*", "https://centris.ca/*"],
-      "js": ["defaults.js", "finance.js", "content.js"],
-      "css": ["panel.css"],
+      "matches": [
+        "https://www.centris.ca/*",
+        "https://centris.ca/*"
+      ],
+      "js": [
+        "defaults.js",
+        "finance.js",
+        "content.js"
+      ],
+      "css": [
+        "panel.css"
+      ],
       "run_at": "document_idle"
     }
   ],
