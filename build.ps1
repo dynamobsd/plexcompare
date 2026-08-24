@@ -128,13 +128,17 @@ if ($LASTEXITCODE -ne 0) {
 }
 git -C $racine push
 
-$existe = gh release view "v$version" --repo $depot 2>$null
-if ($LASTEXITCODE -eq 0) {
+# On liste les tags plutôt que d'interroger une release absente : sous
+# PowerShell 5.1, la sortie d'erreur d'un exécutable natif est convertie
+# en erreur bloquante, et « release not found » ferait échouer le script.
+$tags = @(gh release list --repo $depot --json tagName --jq ".[].tagName")
+if ($tags -contains "v$version") {
   Write-Host "  La release v$version existe déjà, remplacement de l'asset."
   gh release upload "v$version" $crx --repo $depot --clobber
 } else {
   gh release create "v$version" $crx --repo $depot --title "PlexCompare $version" --notes "SHA-256 : ``$sha``"
 }
+if ($LASTEXITCODE -ne 0) { throw "La publication GitHub a échoué." }
 
 Write-Host ""
 Write-Host "Publié. Chrome récupérera la mise à jour dans les 5 heures," -ForegroundColor Green
