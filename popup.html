@@ -5,57 +5,86 @@
   <style>
     :root {
       --bg: #0f2231; --bg2: #16303f; --ink: #eaf2f6; --dim: #9db4c0;
-      --line: #23404f; --accent: #ffb454;
+      --line: #23404f; --accent: #ffb454; --green: #5fd39a; --red: #ffa294;
     }
     * { box-sizing: border-box; }
     body {
-      width: 320px; margin: 0; padding: 14px;
+      width: 330px; margin: 0; padding: 14px;
       background: var(--bg); color: var(--ink);
       font: 13px/1.4 -apple-system, "Segoe UI", Roboto, sans-serif;
     }
     h1 { font-size: 15px; margin: 0 0 2px; color: var(--accent); }
     p.sub { margin: 0 0 12px; color: var(--dim); font-size: 12px; }
+    h2 {
+      font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--dim); margin: 14px 0 4px; font-weight: 700;
+      border-bottom: 1px solid var(--line); padding-bottom: 4px;
+    }
     label { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 0; color: var(--dim); }
     input[type="text"], input[type="number"] {
       width: 110px; background: var(--bg2); border: 1px solid var(--line);
       border-radius: 8px; color: var(--ink); padding: 5px 8px; text-align: right;
     }
     input:focus { outline: none; border-color: var(--accent); }
-    .full { flex-direction: column; align-items: stretch; }
+    .full { flex-direction: column; align-items: stretch; gap: 5px; }
     .full input { width: 100%; text-align: left; }
     .check { justify-content: flex-start; gap: 8px; color: var(--ink); }
-    hr { border: none; border-top: 1px solid var(--line); margin: 10px 0; }
     button {
       width: 100%; margin-top: 10px; padding: 9px;
       background: var(--accent); color: #201200; border: none;
       border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer;
     }
-    #ok { color: #5fd39a; font-size: 12px; min-height: 15px; display: block; margin-top: 6px; text-align: center; }
+    button.secondaire {
+      background: var(--bg2); color: var(--ink);
+      border: 1px solid var(--line); font-weight: 600; font-size: 13px;
+    }
+    button.secondaire:hover { border-color: var(--accent); }
+    #ok { font-size: 12px; min-height: 30px; display: block; margin-top: 8px; text-align: center; color: var(--green); }
+    #ok.erreur { color: var(--red); }
   </style>
 </head>
 <body>
   <h1>PlexCompare</h1>
   <p class="sub">Vos hypothèses — appliquées à toutes les fiches.</p>
 
+  <h2>Financement</h2>
   <label>Taux hypothécaire (%) <input type="number" step="0.01" id="tauxHypo"></label>
-  <label>Amortissement (ans) <input type="number" id="amortissement"></label>
-  <label>Entretien (% des revenus) <input type="number" step="0.5" id="entretienPct"></label>
-  <label>Vacance (% des revenus) <input type="number" step="0.5" id="vacancePct"></label>
-  <label>Assurances ($/an) <input type="number" id="assurancesAn"></label>
-  <label>Déneigement, divers ($/an) <input type="number" id="deneigementAn"></label>
-  <label>Loyer de votre unité ($/mois) <input type="number" id="loyerUniteOccupee"></label>
-  <label class="check"><input type="checkbox" id="villeMontreal"> Paliers de Montréal (taxe de bienvenue)</label>
-
-  <hr>
-
-  <label class="full">URL du script Google (liste partagée)
-    <input type="text" id="sheetUrl" placeholder="https://script.google.com/macros/s/…/exec">
+  <label title="Au-delà de 25 ans, la SCHL ajoute une majoration de 0,20 % à la prime.">
+    Amortissement (ans) <input type="number" id="amortissement">
   </label>
 
+  <h2>Exploitation</h2>
+  <label>Entretien (% des revenus) <input type="number" step="0.5" id="entretienPct"></label>
+  <label title="Appliquée aux loyers réellement perçus : pas de vacance sur le logement que vous habitez.">
+    Vacance (% des loyers) <input type="number" step="0.5" id="vacancePct">
+  </label>
+  <label>Assurances ($/an) <input type="number" id="assurancesAn"></label>
+  <label>Déneigement, divers ($/an) <input type="number" id="deneigementAn"></label>
+
+  <h2>Frais de clôture</h2>
+  <label>Notaire ($) <input type="number" id="fraisNotaire"></label>
+  <label>Inspection ($) <input type="number" id="fraisInspection"></label>
+  <label title="Coussin que vous voulez garder en banque après l'achat.">
+    Fonds de démarrage ($) <input type="number" id="fondsDemarrage">
+  </label>
+
+  <h2>Contexte</h2>
+  <label title="Laissez 0 pour que l'extension estime le loyer de votre unité selon sa taille.">
+    Loyer de votre unité ($/mois) <input type="number" id="loyerUniteOccupee">
+  </label>
+  <label class="check"><input type="checkbox" id="villeMontreal"> Paliers de Montréal (taxe de bienvenue)</label>
+
+  <h2>Liste partagée</h2>
+  <label class="full">URL du script Google
+    <input type="text" id="sheetUrl" placeholder="https://script.google.com/macros/s/…/exec">
+  </label>
+  <button id="tester" class="secondaire">Tester la connexion</button>
+
   <button id="save">Enregistrer</button>
-  <button id="dash" style="background:var(--bg2);color:var(--ink);border:1px solid var(--line);">📊 Ouvrir notre tableau de bord</button>
+  <button id="dash" class="secondaire">📊 Ouvrir notre tableau de bord</button>
   <span id="ok"></span>
 
+  <script src="defaults.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

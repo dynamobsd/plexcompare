@@ -4,7 +4,7 @@ Extension Chrome qui affiche automatiquement la rentabilité des plex directemen
 
 ## 1. Installer l'extension (2 min, chacun sur son ordi)
 
-1. Décompressez le dossier `plexcompare` quelque part de permanent (pas dans Téléchargements — si le dossier bouge, l'extension se désactive).
+1. Placez le dossier `plexcompare` quelque part de permanent (pas dans Téléchargements — si le dossier bouge, l'extension se désactive). Sur cet ordinateur : `C:/Users/Sidney/plexcompare`, suivi par git.
 2. Ouvrez Chrome et allez à `chrome://extensions`.
 3. Activez le **Mode développeur** (coin supérieur droit).
 4. Cliquez **Charger l'extension non empaquetée** et choisissez le dossier `plexcompare`.
@@ -20,6 +20,9 @@ Extension Chrome qui affiche automatiquement la rentabilité des plex directemen
    - Qui a accès : **Tout le monde**
 5. Autorisez l'accès quand Google le demande, puis copiez l'**URL qui se termine par `/exec`**.
 6. Envoyez cette URL à votre conjoint(e).
+7. Collez-la dans le popup de l'extension et cliquez **Tester la connexion** : le message vous dit exactement ce qui cloche si ça ne marche pas.
+
+> **Après chaque modification de `apps-script.gs`**, il faut redéployer : Déployer → Gérer les déploiements → ✏️ Modifier → Version « Nouvelle version » → Déployer. Sinon Google continue de servir l'ancienne version.
 
 ## 3. Configurer vos hypothèses (1 min, chacun)
 
@@ -43,11 +46,24 @@ Cliquez **Enregistrer**.
 ## Notes et limites
 
 - **Si Centris change son site**, l'extraction automatique peut cesser de fonctionner. Le panneau reste utilisable en mode manuel (tapez les chiffres), et le code d'extraction se répare facilement — revenez me voir avec l'exemple d'une fiche qui ne marche plus.
-- **Taxe de bienvenue** : paliers approximatifs 2025 (Montréal ou base provinciale selon la case cochée). Les seuils sont indexés annuellement; ils sont dans `content.js` (fonction `taxeBienvenue`) si vous voulez les ajuster.
-- **Mise de fonds minimale** : calculée selon les règles propriétaire-occupant (5 % duplex jusqu'à 500 k$, 10 % triplex/quadruplex, 20 % au-dessus de 1,5 M$), prime SCHL ajoutée au prêt et taxe de 9 % sur la prime comptée dans le cash requis. C'est un estimé — validez toujours avec votre courtier.
+- **Taxe de bienvenue** : grille officielle **2026** (Montréal ou base provinciale selon la case cochée), vérifiée contre l'exemple publié par la Ville (700 000 $ → 9 349 $). Les deux premiers seuils sont indexés chaque année : ils sont en haut de `finance.js` (constantes `PALIERS_QC` et `PALIERS_MTL`), à réviser chaque janvier.
+- **Mise de fonds minimale** : règles propriétaire-occupant (5 % duplex jusqu'à 500 k$, 10 % triplex/quadruplex, 20 % au-dessus du plafond assurable de 1,5 M$), prime SCHL ajoutée au prêt et taxe de 9 % sur la prime comptée dans le cash requis. La SCHL applique le **même barème de 1 à 4 logements** quand vous occupez une unité (4,00 % / 3,10 % / 2,80 % selon le rapport prêt-valeur), plus **0,20 % si l'amortissement dépasse 25 ans**. C'est un estimé — validez toujours avec votre courtier.
+- **Tests** : ouvrez `tests.html` dans le navigateur après toute modification de `finance.js`. 51 vérifications couvrent les barèmes, l'hypothèque et les scénarios.
 - Les calculs sont des outils d'aide à la décision, pas des conseils financiers : faites valider les chiffres finaux par votre courtier hypothécaire et votre inspecteur.
 
-## Nouveau dans cette version
+## Nouveau dans la version 1.1
+
+- **Vos ajustements sont mémorisés.** Corrigez les loyers réels ou ajoutez un estimé de travaux : en revenant sur la fiche demain, tout est encore là. Un bandeau indique la date du dernier ajustement, avec un bouton **Réinitialiser**. Seuls les champs que vous avez tapés sont conservés — si Centris met le prix à jour, c'est le nouveau prix qui s'affiche.
+- **Chip « Je n'y habite pas »** : bascule en mode investisseur — 20 % comptant, prêt conventionnel sans SCHL, vacance sur tous les logements, et le cashflow devient le chiffre principal.
+- **Revenus annexes** : nouveau champ pour le stationnement, la buanderie ou le rangement.
+- **Vacance plus juste** : elle ne s'applique plus au logement que vous habitez — vous n'y perdez pas de loyer.
+- **Frais de clôture paramétrables** : notaire, inspection et fonds de démarrage se règlent dans le popup au lieu d'être figés à 2 000 $.
+- **Le message d'envoi ne ment plus.** L'ancienne version affichait « Ajoutée ✓ » même quand le script Google répondait une erreur. L'envoi passe maintenant par le service worker, qui lit la vraie réponse et affiche la vraie cause de l'échec.
+- **Tableau de bord éditable** : notes et note /10 se modifient directement, suppression d'une ligne, filtre par adresse, tri en cliquant les entêtes, export CSV et **comparaison côte à côte** de plusieurs propriétés (la meilleure valeur de chaque ligne est étoilée).
+- **Page nettement plus légère.** L'extension relançait un balayage complet du DOM à chaque frappe au clavier et toutes les 3 secondes en permanence. Elle ne balaie plus que ce qui manque encore, une seule fois.
+- **Plus de fiches reconnues** : quintuplex, sextuplex, immeubles à revenus.
+
+## Nouveau dans la version 1.0
 
 - **Section intégrée dans la fiche** : le tableau de rentabilité s'insère directement dans la page Centris, sous le bloc du prix (comme Keepa sur Amazon), au lieu d'un panneau flottant. Si la structure de la page empêche l'insertion, l'extension retombe automatiquement sur un panneau flottant à droite.
 - **Historique de prix** : à chaque visite d'une fiche, le prix est mémorisé localement. Si le vendeur change son prix, une ligne « Historique du prix observé » apparaît avec les dates et la variation (▼ en vert pour une baisse). L'historique commence au moment où vous visitez la fiche pour la première fois — l'extension ne peut pas connaître les prix d'avant son installation.

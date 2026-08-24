@@ -28,8 +28,8 @@
     }
     header h1 { margin: 0; font-size: 20px; color: var(--accent); letter-spacing: 0.02em; }
     header .sub { color: #9db4c0; font-size: 13px; }
+    header .actions { margin-left: auto; display: flex; gap: 8px; }
     header button {
-      margin-left: auto;
       background: var(--navy2);
       color: #eaf2f6;
       border: 1px solid #23404f;
@@ -39,8 +39,9 @@
       cursor: pointer;
     }
     header button:hover { border-color: var(--accent); }
+    header button:disabled { opacity: 0.45; cursor: default; border-color: #23404f; }
 
-    main { max-width: 1250px; margin: 0 auto; padding: 22px 28px 60px; }
+    main { max-width: 1400px; margin: 0 auto; padding: 22px 28px 60px; }
 
     /* Sommaire */
     .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
@@ -53,17 +54,19 @@
     .stat b { display: block; font-size: 21px; font-variant-numeric: tabular-nums; }
     .stat span { font-size: 11.5px; color: var(--dim); }
 
-    /* Barre de tri */
+    /* Barre d'outils */
     .toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
     .toolbar label { color: var(--dim); font-size: 13px; }
-    .toolbar select {
+    .toolbar select, .toolbar input[type="search"] {
       background: #fff; border: 1px solid var(--line); border-radius: 9px;
-      padding: 6px 10px; font-size: 13px; color: var(--ink);
+      padding: 6px 10px; font-size: 13px; color: var(--ink); font-family: inherit;
     }
+    .toolbar input[type="search"] { min-width: 220px; }
+    .toolbar .compteur { color: var(--dim); font-size: 12.5px; margin-left: auto; }
 
     /* Tableau */
     .wrap { background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: auto; }
-    table { border-collapse: collapse; width: 100%; min-width: 1050px; }
+    table { border-collapse: collapse; width: 100%; min-width: 1150px; }
     th, td { padding: 10px 12px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
     th {
       background: var(--navy); color: #cfdde6; font-size: 11px;
@@ -72,13 +75,16 @@
     }
     th:hover { color: var(--accent); }
     th.actif { color: var(--accent); }
+    th.fige { cursor: default; }
+    th.fige:hover { color: #cfdde6; }
     td:first-child, th:first-child { text-align: left; }
+    td.sel, th.sel { text-align: center; width: 34px; padding-left: 8px; padding-right: 4px; }
     tbody tr { border-top: 1px solid var(--line); }
     tbody tr:hover { background: #f5f9fb; }
+    tbody tr.choisie { background: #fdf8ef; }
     td a { color: var(--navy); font-weight: 600; text-decoration: none; }
     td a:hover { color: var(--accent); }
-    .adresse { max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
-    .notes { text-align: left; max-width: 220px; white-space: normal; font-size: 12.5px; color: var(--dim); }
+    .adresse { max-width: 280px; overflow: hidden; text-overflow: ellipsis; }
     .good { color: var(--green); font-weight: 700; }
     .mid { color: var(--amber); font-weight: 700; }
     .bad { color: var(--red); font-weight: 700; }
@@ -88,6 +94,48 @@
       font-size: 10px; font-weight: 800; border-radius: 20px; padding: 1px 8px; margin-left: 6px;
     }
 
+    /* Cellules éditables */
+    td.editable { text-align: left; }
+    td input.champ {
+      width: 100%; min-width: 60px; background: transparent;
+      border: 1px solid transparent; border-radius: 7px;
+      padding: 4px 6px; font: inherit; color: var(--ink);
+    }
+    td input.champ:hover { border-color: var(--line); }
+    td input.champ:focus { outline: none; border-color: var(--accent); background: #fffdf8; }
+    td input.note { width: 62px; text-align: right; font-variant-numeric: tabular-nums; }
+    td.notes { min-width: 240px; white-space: normal; }
+
+    .retirer {
+      background: none; border: 1px solid transparent; border-radius: 7px;
+      color: var(--dim); cursor: pointer; font-size: 13px; padding: 2px 7px;
+    }
+    .retirer:hover { border-color: var(--red); color: var(--red); }
+    .retirer.confirme { border-color: var(--red); color: #fff; background: var(--red); font-size: 11.5px; font-weight: 700; }
+
+    /* Comparaison côte à côte */
+    .compare {
+      background: #fff; border: 1px solid var(--line); border-radius: 12px;
+      padding: 0; margin-bottom: 20px; overflow: auto;
+    }
+    .compare h2 {
+      margin: 0; padding: 13px 18px; font-size: 13px; color: #eaf2f6;
+      background: var(--navy); border-radius: 11px 11px 0 0;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .compare h2 span { color: var(--accent); }
+    .compare h2 button {
+      margin-left: auto; background: var(--navy2); color: #eaf2f6;
+      border: 1px solid #23404f; border-radius: 8px; padding: 4px 10px;
+      font-size: 12px; cursor: pointer;
+    }
+    .compare table { min-width: 0; }
+    .compare th { position: static; background: #fff; color: var(--dim); text-align: left; cursor: default; }
+    .compare th:hover { color: var(--dim); }
+    .compare td { text-align: right; }
+    .compare .gagnant { background: #f2fbf6; }
+    .compare .gagnant::after { content: " ★"; color: var(--green); font-size: 11px; }
+
     /* États */
     .message {
       background: #fff; border: 1px solid var(--line); border-radius: 12px;
@@ -95,17 +143,32 @@
     }
     .message b { color: var(--ink); }
     .message code { background: var(--paper); padding: 2px 6px; border-radius: 6px; }
+
+    .toast {
+      position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+      background: var(--navy); color: #eaf2f6; padding: 10px 20px;
+      border-radius: 10px; font-size: 13px; box-shadow: 0 6px 22px rgba(15,34,49,.28);
+      opacity: 0; pointer-events: none; transition: opacity .18s;
+    }
+    .toast.visible { opacity: 1; }
+    .toast.erreur { background: var(--red); }
   </style>
 </head>
 <body>
   <header>
     <h1>PlexCompare</h1>
     <span class="sub">Notre tableau de bord — comparaison des propriétés</span>
-    <button id="refresh">↻ Actualiser</button>
+    <div class="actions">
+      <button id="comparer" disabled>⇄ Comparer</button>
+      <button id="export">⬇ Exporter en CSV</button>
+      <button id="refresh">↻ Actualiser</button>
+    </div>
   </header>
 
   <main>
     <div class="stats" id="stats"></div>
+
+    <div id="comparaison"></div>
 
     <div class="toolbar">
       <label for="tri">Trier par</label>
@@ -118,11 +181,17 @@
         <option value="note">Notre note /10 (décroissant)</option>
         <option value="date">Date d'ajout (récent d'abord)</option>
       </select>
+      <input type="search" id="recherche" placeholder="Filtrer par adresse ou note…">
+      <span class="compteur" id="compteur"></span>
     </div>
 
     <div id="contenu"></div>
   </main>
 
+  <div class="toast" id="toast"></div>
+
+  <script src="defaults.js"></script>
+  <script src="finance.js"></script>
   <script src="dashboard.js"></script>
 </body>
 </html>

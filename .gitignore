@@ -1,0 +1,7 @@
+# Rien à ignorer pour l’instant — l’extension est chargée non empaquetée.
+*.zip
+*.crx
+*.pem
+node_modules/
+.DS_Store
+Thumbs.db

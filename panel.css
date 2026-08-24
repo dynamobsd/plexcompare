@@ -341,3 +341,37 @@
   border-radius: 6px;
   padding: 1px 6px;
 }
+
+/* Bandeau « vos ajustements sont enregistrés » */
+#plexcompare-panel .pc-memoire {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  font-size: 12px;
+  color: var(--pc-dim);
+  background: #fbf6ee;
+  border-bottom: 1px solid var(--pc-line);
+}
+#plexcompare-panel .pc-memoire em { font-style: normal; }
+#plexcompare-panel .pc-oublier {
+  margin-left: auto;
+  background: #fff;
+  color: var(--pc-dim);
+  border: 1px solid var(--pc-line);
+  border-radius: 8px;
+  padding: 3px 10px;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+#plexcompare-panel .pc-oublier:hover { border-color: var(--pc-accent); color: var(--pc-ink); }
+
+/* Champ que vous avez ajusté vous-même */
+#plexcompare-panel .pc-input-wrap.pc-ajuste {
+  border-color: var(--pc-accent);
+  background: #fffdf8;
+}
+#plexcompare-panel .pc-input-wrap.pc-ajuste.pc-manquant {
+  border-color: #e8a13c;
+  background: #fdf3e3;
+}

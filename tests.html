@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>PlexCompare — tests du moteur financier</title>
+  <style>
+    body { font: 14px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif;
+           background: #f5f8fa; color: #1c2b33; margin: 0; padding: 28px; }
+    h1 { font-size: 19px; margin: 0 0 4px; }
+    p.sub { color: #5f7683; margin: 0 0 18px; font-size: 13px; }
+    #bilan { font-size: 15px; font-weight: 700; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; }
+    #bilan.ok { background: #e6f7ee; color: #1e9e63; border: 1px solid #b6e6cd; }
+    #bilan.ko { background: #fdecea; color: #d2442f; border: 1px solid #f5c2ba; }
+    table { border-collapse: collapse; width: 100%; background: #fff;
+            border: 1px solid #dde6ea; border-radius: 10px; overflow: hidden; }
+    td { padding: 7px 12px; border-top: 1px solid #eef3f6; font-size: 13px; }
+    td.etat { width: 34px; text-align: center; font-weight: 800; }
+    td.groupe { background: #0f2231; color: #ffb454; font-weight: 700;
+                text-transform: uppercase; font-size: 11px; letter-spacing: .06em; }
+    tr.echec td { background: #fdf3f1; }
+    td.detail { color: #5f7683; text-align: right; font-variant-numeric: tabular-nums; }
+    .vert { color: #1e9e63; } .rouge { color: #d2442f; }
+  </style>
+</head>
+<body>
+  <h1>PlexCompare — tests du moteur financier</h1>
+  <p class="sub">Ouvre ce fichier dans le navigateur après chaque modification de <code>finance.js</code>.</p>
+  <div id="bilan">…</div>
+  <table id="resultats"></table>
+
+  <script src="defaults.js"></script>
+  <script src="finance.js"></script>
+  <script>
+  (() => {
+    "use strict";
+    const lignes = [];
+    let reussis = 0, echoues = 0;
+
+    const groupe = (titre) => lignes.push(`<tr><td class="groupe" colspan="3">${titre}</td></tr>`);
+
+    function verifier(nom, obtenu, attendu, tolerance = 0) {
+      const ok = typeof attendu === "number" && typeof obtenu === "number"
+        ? Math.abs(obtenu - attendu) <= tolerance
+        : Object.is(obtenu, attendu) || JSON.stringify(obtenu) === JSON.stringify(attendu);
+      ok ? reussis++ : echoues++;
+      const detail = ok
+        ? (typeof obtenu === "number" ? obtenu.toFixed(2) : JSON.stringify(obtenu))
+        : `obtenu ${JSON.stringify(obtenu)} · attendu ${JSON.stringify(attendu)}${tolerance ? " ±" + tolerance : ""}`;
+      lignes.push(`<tr class="${ok ? "" : "echec"}">
+        <td class="etat ${ok ? "vert" : "rouge"}">${ok ? "✓" : "✕"}</td>
+        <td>${nom}</td><td class="detail">${detail}</td></tr>`);
+    }
+
+    const vrai = (nom, cond) => verifier(nom, !!cond, true);
+
+    // ============ Droits de mutation ============
+    groupe("Droits de mutation — grille 2026");
+
+    // Exemple officiel de la Ville de Montréal : base 700 000 $ → 9 349,00 $
+    verifier("Montréal, 700 000 $ (exemple officiel de la Ville)",
+      PC.taxeBienvenue(700000, true), 9349, 0.01);
+
+    // 62 900 × 0,5 % + 252 100 × 1 % + 85 000 × 1,5 %
+    verifier("Hors Montréal, 400 000 $",
+      PC.taxeBienvenue(400000, false), 4110.50, 0.01);
+
+    verifier("Premier palier seulement, 50 000 $",
+      PC.taxeBienvenue(50000, false), 250, 0.01);
+
+    verifier("Prix nul", PC.taxeBienvenue(0, true), 0);
+
+    vrai("Montréal taxe davantage qu'ailleurs au-dessus de 552 300 $",
+      PC.taxeBienvenue(900000, true) > PC.taxeBienvenue(900000, false));
+
+    // ============ Hypothèque ============
+    groupe("Paiement hypothécaire (composition semi-annuelle)");
+
+    verifier("500 000 $ à 4,79 % sur 25 ans",
+      PC.paiementMensuel(500000, 4.79, 25), 2848.85, 1);
+
+    vrai("Un amortissement plus long réduit la mensualité",
+      PC.paiementMensuel(500000, 4.79, 30) < PC.paiementMensuel(500000, 4.79, 25));
+
+    vrai("Un taux plus élevé augmente la mensualité",
+      PC.paiementMensuel(500000, 6.29, 25) > PC.paiementMensuel(500000, 4.79, 25));
+
+    verifier("Sans capital, pas de paiement", PC.paiementMensuel(0, 4.79, 25), 0);
+
+    // ============ Mise de fonds ============
+    groupe("Mise de fonds minimale");
+
+    verifier("Duplex 600 000 $, occupant (5 % + 10 %)",
+      PC.miseDeFondsMin(600000, 2, true), 35000, 0.01);
+
+    verifier("Duplex 400 000 $, occupant (5 %)",
+      PC.miseDeFondsMin(400000, 2, true), 20000, 0.01);
+
+    verifier("Triplex 600 000 $, occupant (10 %)",
+      PC.miseDeFondsMin(600000, 3, true), 60000, 0.01);
+
+    verifier("Duplex 600 000 $, investisseur (20 %)",
+      PC.miseDeFondsMin(600000, 2, false), 120000, 0.01);
+
+    verifier("Au-dessus du plafond assurable de 1,5 M$ (20 %)",
+      PC.miseDeFondsMin(1600000, 2, true), 320000, 0.01);
+
+    // ============ Prime SCHL ============
+    groupe("Prime SCHL");
+
+    verifier("RPV 94 % → 4,00 %",
+      PC.primeSCHL(600000, 35000, true, 25).prime, 565000 * 0.04, 0.01);
+
+    verifier("RPV 90 % → 3,10 %",
+      PC.primeSCHL(600000, 60000, true, 25).prime, 540000 * 0.031, 0.01);
+
+    verifier("Taxe de vente QC de 9 % sur la prime",
+      PC.primeSCHL(600000, 60000, true, 25).taxePrime, 540000 * 0.031 * 0.09, 0.01);
+
+    verifier("Amortissement 30 ans → majoration de 0,20 %",
+      PC.primeSCHL(600000, 60000, true, 30).tauxPrime, 0.033, 1e-9);
+
+    verifier("20 % comptant → aucune prime",
+      PC.primeSCHL(600000, 120000, true, 25).prime, 0);
+
+    verifier("Investisseur non occupant → aucune prime",
+      PC.primeSCHL(600000, 60000, false, 25).prime, 0);
+
+    verifier("Au-dessus du plafond assurable → aucune prime",
+      PC.primeSCHL(1600000, 200000, true, 25).prime, 0);
+
+    // ============ Lecture des montants ============
+    groupe("Lecture des montants et des unités");
+
+    verifier("Espaces insécables", PC.parseMoney("1 234 567 $"), 1234567);
+    verifier("Espaces ordinaires", PC.parseMoney("24 000 $"), 24000);
+    verifier("Décimale à la française", PC.parseMoney("2 500,50 $"), 2500.50);
+    verifier("Séparateurs de milliers à l'anglaise", PC.parseMoney("1,234,567"), 1234567);
+    verifier("Chaîne vide", PC.parseMoney(""), null);
+    verifier("Zéro reste zéro, pas null", PC.parseMoney("0"), 0);
+    verifier("Total collé au montant", PC.parseMoney("780 100 $"), 780100);
+
+    verifier("« 1 x 6 ½, 2 x 4 ½ » trié décroissant",
+      PC.parseUnites("1 x 6 ½, 2 x 4 ½"), [6.5, 4.5, 4.5]);
+    verifier("Texte sans unités", PC.parseUnites("aucune donnée"), null);
+    verifier("Libellé d'une taille", PC.libelleTaille(5.5), "5½");
+
+    // ============ Calcul complet ============
+    groupe("Calcul complet — triplex 600 000 $, 36 000 $ de revenus");
+
+    const fiche = {
+      prix: 600000, revenusAn: 36000, taxeMuni: 4000, taxeScol: 500,
+      nbUnites: 3, unitesDetail: "1 x 6 ½, 2 x 4 ½"
+    };
+    const r = PC.calculer(fiche, PC_DEFAULTS, {});
+
+    verifier("MRB = prix ÷ revenus", r.mrb, 600000 / 36000, 1e-9);
+    verifier("Mise de fonds au minimum légal (10 %)", r.mdf, 60000, 0.01);
+    verifier("Taxes totales", r.taxesAn, 4500, 0.01);
+    vrai("Vous occupez le plus grand logement", r.repartition[0].occupe === true);
+    verifier("Le 6½ est estimé au prorata de sa taille",
+      r.repartition[0].loyer, 3000 * 6.5 / 15.5, 0.01);
+    vrai("La vacance de l'occupant est moindre que celle de l'investisseur",
+      r.vacanceOccAn < r.vacanceInvAn);
+    vrai("Cash total ≥ cash de clôture", r.cashTotal >= r.cashCloture);
+    verifier("Cap rate = NOI ÷ prix", r.capRate, (r.noiAn / 600000) * 100, 1e-9);
+    verifier("DSCR = NOI ÷ service de la dette", r.dscr, r.noiAn / (r.hypo * 12), 1e-9);
+
+    groupe("Scénarios");
+
+    const rInvest = PC.calculer(fiche, PC_DEFAULTS, { invest: true });
+    verifier("Investisseur : 20 % comptant", rInvest.mdf, 120000, 0.01);
+    verifier("Investisseur : aucune prime SCHL", rInvest.prime, 0);
+    verifier("Investisseur : le coût d'habitation est l'inverse du cashflow",
+      rInvest.coutHabitation, -rInvest.cashflowMois, 1e-9);
+    verifier("Investisseur : aucun loyer retiré pour vous", rInvest.loyerOccupe, 0);
+
+    const rStress = PC.calculer(fiche, PC_DEFAULTS, { stress: true });
+    verifier("Test de tension : taux + 1,5 point",
+      rStress.tauxEffectif, PC_DEFAULTS.tauxHypo + 1.5, 1e-9);
+    vrai("Test de tension : mensualité plus élevée", rStress.hypo > r.hypo);
+
+    const rMarche = PC.calculer({ ...fiche, revenusMarche: 48000 }, PC_DEFAULTS, { marche: true });
+    verifier("Loyers au marché : revenus remplacés", rMarche.revenusAn, 48000, 0.01);
+    vrai("Loyers au marché : meilleur cashflow", rMarche.cashflowMois > r.cashflowMois);
+
+    const rAutres = PC.calculer({ ...fiche, autresRevenusAn: 3600 }, PC_DEFAULTS, {});
+    verifier("Revenus annexes ajoutés aux revenus totaux", rAutres.revenusAn, 39600, 0.01);
+    vrai("Revenus annexes : coût d'habitation réduit", rAutres.coutHabitation < r.coutHabitation);
+
+    const rVide = PC.calculer({}, PC_DEFAULTS, {});
+    vrai("Fiche vide : aucun NaN dans le résultat",
+      Object.values(rVide).every((v) => typeof v !== "number" || isFinite(v)));
+
+    // ============ Bilan ============
+    document.getElementById("resultats").innerHTML = lignes.join("");
+    const bilan = document.getElementById("bilan");
+    bilan.className = echoues ? "ko" : "ok";
+    bilan.textContent = echoues
+      ? `${echoues} test${echoues > 1 ? "s" : ""} en échec sur ${reussis + echoues}`
+      : `${reussis} tests réussis`;
+  })();
+  </script>
+</body>
+</html>
