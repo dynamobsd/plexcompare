@@ -1,9 +1,0 @@
-Windows Registry Editor Version 5.00
-
-; PlexCompare - retrait de la politique d installation
-; ----------------------------------------------------
-; Supprime la cle ecrite par installer-plexcompare.reg.
-; A executer en tant qu administrateur, puis redemarrer Chrome.
-; L extension sera desinstallee automatiquement au redemarrage.
-
-[-HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome\ExtensionSettings\lfibmbaifoddfiaophkjbhfgeenialjc]

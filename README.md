@@ -21,16 +21,15 @@ Pour l'installation et le mode d'emploi, voir **[INSTALLATION.md](INSTALLATION.m
 | `panel.css` | Styles du panneau injecté et des badges |
 | `apps-script.gs` | Code à coller dans Apps Script, côté Google Sheet |
 | `tests.html` | Tests du moteur financier — à ouvrir dans le navigateur |
+| `maj.cmd` | Mise à jour en un double-clic |
 
 ## Développer
 
-```bash
-git pull                       # récupérer les changements
-# … modifier les fichiers …
-```
+Modifiez les fichiers, puis dans Chrome : `chrome://extensions` → bouton **↻**
+sur la carte PlexCompare, et rechargez l'onglet Centris.
 
-Puis dans Chrome : `chrome://extensions` → bouton **↻** sur la carte PlexCompare,
-et rechargez l'onglet Centris.
+Le dossier chargé par Chrome étant le dépôt lui-même, une modification est
+visible immédiatement après le rechargement — aucun empaquetage nécessaire.
 
 ## Tester
 
@@ -57,43 +56,38 @@ Les seuils fiscaux sont regroupés en haut de `finance.js` :
 Outil d'aide à la décision, pas un conseil financier. Les chiffres finaux doivent être
 validés par un courtier hypothécaire et un inspecteur en bâtiment.
 
-## Distribution et mise à jour automatique
+## Installation et mise à jour
 
-L'extension est signée et distribuée hors du Chrome Web Store, via GitHub.
-Chrome interroge `updates.xml` environ toutes les 5 heures et installe seul
-toute version supérieure à celle en place.
+L'extension se charge **non empaquetée**, directement depuis ce dossier.
 
-| Élément | Valeur |
-|---|---|
-| ID de l'extension | `lfibmbaifoddfiaophkjbhfgeenialjc` |
-| Manifeste de mise à jour | `https://dynamobsd.github.io/plexcompare/updates.xml` |
-| Paquets | Releases GitHub, tag `v<version>` |
-| Clé de signature | `~/.plexcompare-signing/plexcompare.pem` — **hors du dépôt, à sauvegarder** |
+`chrome://extensions` → **Mode développeur** → **Charger l'extension non
+empaquetée** → choisir le dossier du dépôt.
 
-> Si la clé est perdue, l'ID de l'extension change : il faut refaire la
-> politique de registre et réinstaller sur chaque poste. Les réglages
-> enregistrés dans `chrome.storage.sync` seraient perdus avec elle.
+Le champ `key` du manifeste fixe l'identifiant de l'extension
+(`lfibmbaifoddfiaophkjbhfgeenialjc`). Sans lui, Chrome dériverait l'ID du
+chemin du dossier : déplacer le dépôt ferait perdre tous les réglages
+enregistrés. Ne pas le retirer.
 
-### Publier une nouvelle version
+### Mettre à jour
 
-```powershell
-# 1. Monter le numéro de version dans manifest.json
-# 2. Vérifier que tests.html passe au vert
-.\build.ps1 -Publier
-```
+Double-cliquer sur **`maj.cmd`**. Il récupère la dernière version, ouvre
+`chrome://extensions` et il ne reste qu'à cliquer le bouton de rechargement
+sur la carte PlexCompare. Fermer et rouvrir Chrome produit le même effet.
 
-Le script fabrique le `.crx` signé, régénère `updates.xml`, pousse le dépôt
-et crée la release GitHub. Chrome fera le reste. Pour forcer tout de suite :
-`chrome://extensions` → **Tout mettre à jour**.
+### Pourquoi pas de mise à jour automatique
 
-### Installer sur un poste
+Google réserve l'installation automatique d'extensions hébergées hors du
+Chrome Web Store aux postes joints à un domaine Active Directory ou inscrits
+en gestion d'entreprise. Sur un poste personnel, Chrome ignore purement et
+simplement la politique `ExtensionSettings`, quoi qu'on écrive dans le
+registre — vérifié sur ce poste : politique correctement inscrite, profil
+neuf, aucune tentative d'installation dans le journal de Chrome.
 
-Exécuter `deploiement/installer-plexcompare.reg` en administrateur, Chrome
-fermé. Le fichier écrit une seule clé de politique dans `HKEY_LOCAL_MACHINE`
-qui dit à Chrome d'installer l'extension (`force_installed`) et où chercher
-ses mises à jour. Ne jamais installer le `.crx` par glisser-déposer : Chrome
-bloque définitivement les extensions installées ainsi hors du Web Store.
-`desinstaller-plexcompare.reg` annule l'opération.
+La seule voie offrant une vraie mise à jour automatique sur un poste non géré
+est le Chrome Web Store en publication **non répertoriée** (5 $ une fois,
+extension non cherchable, installation par lien privé). Cette option reste
+ouverte : le code est prêt, il ne manquerait qu'un zip et un téléversement.
 
-Cette voie exige que `updates.xml` et le `.crx` soient **accessibles
-publiquement** : Chrome ne peut pas s'authentifier auprès d'un dépôt privé.
+> Ne jamais installer le `.crx` par glisser-déposer dans `chrome://extensions`.
+> Chrome l'accepte puis le désactive définitivement, sans possibilité de
+> réactivation.
