@@ -21,7 +21,7 @@
   // Champs modifiables du panneau, dans l'ordre du formulaire
   const CHAMPS_FICHE = [
     "prix", "revenus", "marche", "autres", "muni", "scol",
-    "occupe", "travaux", "mdf"
+    "occupe", "travaux", "mdf", "bienvenue"
   ];
 
   // ---------- Sécurité ----------
@@ -390,6 +390,11 @@
 
       <div class="pc-repartition" id="pc-repartition" style="display:none"></div>
 
+      <details class="pc-calc">
+        <summary>Voir le détail du calcul <em>(d'où vient chaque chiffre)</em></summary>
+        <div id="pc-calc"></div>
+      </details>
+
       <div id="pc-historique"></div>
 
       <details class="pc-details">
@@ -404,6 +409,7 @@
           ${ligneKV("Loyer de votre unité / mois (vide = estimé)", "occupe", v.occupe ?? (settings.loyerUniteOccupee || ""))}
           ${ligneKV("Travaux estimés", "travaux", v.travaux ?? "")}
           ${ligneKV("Mise de fonds (vide = minimum)", "mdf", v.mdf ?? "")}
+          ${ligneKV("Taxe de bienvenue (vide = estimée)", "bienvenue", v.bienvenue ?? "")}
         </div>
       </details>`;
 
@@ -470,6 +476,10 @@
       uniteChoisie = parseInt(b.dataset.u, 10) || 0;
       sauverOverride();
       rafraichir();
+    });
+
+    panel.querySelector(".pc-calc").addEventListener("toggle", () => {
+      if (panel.querySelector(".pc-calc").open) rafraichir();
     });
 
     panel.querySelector("#pc-add").addEventListener("click", envoyerVersListe);
@@ -544,10 +554,74 @@
       loyerOccupe: parseMoney(inputs.occupe.value),
       travaux: parseMoney(inputs.travaux.value),
       miseDeFonds: parseMoney(inputs.mdf.value),
+      bienvenueManuel: parseMoney(inputs.bienvenue.value),
       nbUnites: donnees.nbUnites || 2,
       unitesDetail: donnees.unitesDetail || null,
       uniteOccupee: uniteChoisie
     };
+  }
+
+  // Le détail complet, replié par défaut : d'où vient chaque dollar.
+  function detailCalcul(r) {
+    const rMois = Math.pow(1 + r.tauxEffectif / 100 / 2, 2 / 12) - 1;
+    const interet = r.pret * rMois;
+    const capital = Math.max(0, r.hypo - interet);
+
+    const sec = (t) => `<tr class="pc-c-sec"><th colspan="3">${esc(t)}</th></tr>`;
+    const l = (lab, note, mt, cls) =>
+      `<tr class="${cls || ""}"><th>${esc(lab)}</th>` +
+      `<td class="pc-c-note">${note || ""}</td>` +
+      `<td class="pc-c-mt">${mt}</td></tr>`;
+
+    const parUnite = r.repartition
+      .map((u) => l(u.libelle + (u.occupe ? " — le vôtre" : ""),
+        u.occupe ? "retiré des loyers perçus" : "loué",
+        fmt(u.loyer), u.occupe ? "pc-c-vous" : "")).join("");
+
+    return `<table class="pc-c-table">
+      ${sec("Financement")}
+      ${l("Prix demandé", "la fiche Centris", fmt(r.prix))}
+      ${l("Mise de fonds", r.mdf === r.mdfMin ? "minimum légal pour " + r.nbUnites + " logements" : "votre valeur", "− " + fmt(r.mdf))}
+      ${l("Prime SCHL", r.prime ? fmtPct(r.tauxPrime * 100, 2) + " % · ajoutée au prêt" : "aucune", "+ " + fmt(r.prime))}
+      ${l("Prêt", "prix − mise de fonds + prime", fmt(r.pret), "pc-c-tot")}
+      ${l("Mensualité", fmtPct(r.tauxEffectif) + " % sur " + r.amort + " ans", fmt(r.hypo), "pc-c-tot")}
+      ${l("dont intérêts", "perdus", fmt(interet))}
+      ${l("dont capital", "vous revient à la revente", fmt(capital), "pc-c-bon")}
+
+      ${sec("Revenus")}
+      ${parUnite}
+      ${l("Autres revenus", "stationnement, buanderie", fmt(r.autresRevenusAn / 12))}
+      ${l("Loyers réellement perçus", r.occupant ? Math.max(r.nbUnites - 1, 0) + " logements" : "tous les logements", fmt(r.loyersPercusMois), "pc-c-tot pc-c-bon")}
+
+      ${sec("Dépenses d'exploitation, par mois")}
+      ${l("Taxes municipales + scolaires", "extraites de la fiche", "− " + fmt(r.taxesAn / 12))}
+      ${l("Entretien", fmtPct(settings.entretienPct) + " % des revenus — provision", "− " + fmt(r.entretienAn / 12))}
+      ${l("Vacance", fmtPct(settings.vacancePct) + " % des loyers perçus — provision", "− " + fmt((r.occupant ? r.vacanceOccAn : r.vacanceInvAn) / 12))}
+      ${l("Assurances", "votre réglage", "− " + fmt(settings.assurancesAn / 12))}
+      ${l("Déneigement, divers", "votre réglage", "− " + fmt(settings.deneigementAn / 12))}
+      ${l("Total d'exploitation", "hypothèque exclue", "− " + fmt((r.occupant ? r.depensesOccAn : r.depensesInvAn) / 12), "pc-c-tot")}
+
+      ${sec("Votre coût d'habitation")}
+      ${l("Sorties totales", "hypothèque + exploitation, sans aucun loyer", "− " + fmt(r.sortiesMois))}
+      ${l("Loyers encaissés", "les autres logements", "+ " + fmt(r.loyersPercusMois))}
+      ${l("Coût réel d'habitation", "par mois", fmt(r.coutHabitation), "pc-c-final")}
+      ${l("Coût net d'enrichissement", "une fois le capital remboursé déduit", fmt(r.coutHabitation - capital))}
+
+      ${sec("Cashflow — tous les logements loués")}
+      ${l("Revenus bruts", "votre logement compris", "+ " + fmt(r.revenusAn / 12))}
+      ${l("Hypothèque", "", "− " + fmt(r.hypo))}
+      ${l("Exploitation", "vacance sur tous les loyers", "− " + fmt(r.depensesInvAn / 12))}
+      ${l("Cashflow", "par mois", fmt(r.cashflowMois), "pc-c-final")}
+
+      ${sec("À sortir le jour de l'achat")}
+      ${l("Mise de fonds", "", fmt(r.mdf))}
+      ${l("Taxe de bienvenue", r.bienvenueEstimee ? "estimée · grille " + ANNEE_MUTATION + (settings.villeMontreal ? " Montréal" : " Québec") : "votre valeur", fmt(r.bienvenue), r.bienvenueEstimee ? "pc-c-doute" : "")}
+      ${l("Taxe sur la prime SCHL", r.taxePrime ? "9 % — payable comptant" : "aucune prime", fmt(r.taxePrime))}
+      ${l("Notaire", "estimé", fmt(r.fraisNotaire))}
+      ${l("Inspection", "estimé", fmt(r.fraisInspection))}
+      ${r.travaux ? l("Travaux", "votre estimé", fmt(r.travaux)) : ""}
+      ${l("Cash total requis", "", fmt(r.cashTotal), "pc-c-final")}
+    </table>`;
   }
 
   const classeCashflow = (v) =>
@@ -627,6 +701,9 @@
         <div class="pc-cell"><b>${fmt(r.bienvenue)}</b><span>Taxe de bienvenue<br>grille ${ANNEE_MUTATION}${settings.villeMontreal ? " · Montréal" : " · Québec"}</span></div>
         <div class="pc-cell"><b>${fmt(r.taxesAn)}</b><span>Taxes totales /an<br>muni + scolaires</span></div>
         <div class="pc-cell"><b>${fmt(r.loyerMoyenPorte)}</b><span>Loyer moyen /porte<br>revenus ÷ ${r.nbUnites} unités</span></div>`;
+
+      const calc = panel.querySelector("#pc-calc");
+      if (calc && panel.querySelector(".pc-calc").open) calc.innerHTML = detailCalcul(r);
     });
   }
 

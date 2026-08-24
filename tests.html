@@ -185,6 +185,20 @@
     vrai("Le cashflow ne dépend pas du logement occupé",
       Math.abs(rPetit.cashflowMois - rGrand.cashflowMois) < 1e-9);
 
+    groupe("Taxe de bienvenue saisie à la main");
+
+    verifier("Sans saisie, elle est estimée",
+      PC.calculer(fiche, PC_DEFAULTS, {}).bienvenueEstimee, true);
+    verifier("Une valeur saisie remplace l'estimation",
+      PC.calculer({ ...fiche, bienvenueManuel: 18330 }, PC_DEFAULTS, {}).bienvenue, 18330);
+    verifier("...et le drapeau le signale",
+      PC.calculer({ ...fiche, bienvenueManuel: 18330 }, PC_DEFAULTS, {}).bienvenueEstimee, false);
+    verifier("Zéro est une valeur valide, pas une absence",
+      PC.calculer({ ...fiche, bienvenueManuel: 0 }, PC_DEFAULTS, {}).bienvenue, 0);
+    vrai("Une taxe plus élevée augmente le cash requis",
+      PC.calculer({ ...fiche, bienvenueManuel: 18330 }, PC_DEFAULTS, {}).cashTotal >
+      PC.calculer(fiche, PC_DEFAULTS, {}).cashTotal);
+
     groupe("Coût sans locataires");
 
     verifier("Sorties mensuelles = hypothèque + exploitation",

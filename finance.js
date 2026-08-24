@@ -253,7 +253,12 @@ var PC = (() => {
     const loyerMoyenPorte = revenusLoyers && nbUnites ? revenusLoyers / 12 / nbUnites : null;
 
     // --- Cash requis à la clôture ---
-    const bienvenue = taxeBienvenue(prix, settings.villeMontreal);
+    // Chaque municipalité fixe ses propres paliers au-delà de 500 000 $ et
+    // peu les publient clairement. Une valeur saisie à la main l'emporte.
+    const bienvenueEstimee = d.bienvenueManuel == null;
+    const bienvenue = bienvenueEstimee
+      ? taxeBienvenue(prix, settings.villeMontreal)
+      : d.bienvenueManuel;
     const travaux = d.travaux || 0;
     const fraisNotaire = settings.fraisNotaire || 0;
     const fraisInspection = settings.fraisInspection || 0;
@@ -280,7 +285,7 @@ var PC = (() => {
       // indicateurs
       mrb, capRate, dscr, prixParPorte, loyerMoyenPorte, cashOnCash,
       // clôture
-      bienvenue, fraisNotaire, fraisInspection, fondsDemarrage, travaux,
+      bienvenue, bienvenueEstimee, fraisNotaire, fraisInspection, fondsDemarrage, travaux,
       cashCloture, cashTotal
     };
   }
