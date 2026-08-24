@@ -195,18 +195,27 @@ var PC = (() => {
       Array.from({ length: nbUnites }, () => 1); // tailles inconnues → parts égales
     const sommePoids = unites.reduce((a, b) => a + b, 0);
     const revenusMois = revenusLoyers / 12;
+
+    // Quelle unité habitez-vous ? Index dans la liste triée du plus grand au
+    // plus petit. Par défaut le plus grand, mais rien n'oblige à le prendre :
+    // habiter le petit logement et louer le grand change tout le calcul.
+    const idxOccupe = Math.min(
+      Math.max(Math.round(d.uniteOccupee || 0), 0),
+      Math.max(unites.length - 1, 0)
+    );
+
     const repartition = unites.map((taille, i) => ({
       taille,
       libelle: libelleTaille(taille),
       loyer: sommePoids ? (revenusMois * taille) / sommePoids : 0,
-      occupe: occupant && i === 0 // trié décroissant : la plus grande = la vôtre
+      occupe: occupant && i === idxOccupe
     }));
 
     const loyerOccupeEstime = d.loyerOccupe == null;
     let loyerOccupe = 0;
     if (occupant) {
       loyerOccupe = loyerOccupeEstime
-        ? (repartition.length ? repartition[0].loyer : 0)
+        ? (repartition[idxOccupe] ? repartition[idxOccupe].loyer : 0)
         : d.loyerOccupe;
     }
     const loyersPercusMois = Math.max(0, revenusMois - loyerOccupe) + autresRevenusAn / 12;
@@ -265,7 +274,9 @@ var PC = (() => {
       depensesInvAn, depensesOccAn, noiAn,
       // résultats
       cashflowMois, coutHabitation, loyersPercusMois, loyerOccupe,
-      loyerOccupeEstime, repartition,
+      loyerOccupeEstime, repartition, uniteOccupee: idxOccupe,
+      // Ce que l'immeuble coûterait si aucun logement n'était loué
+      sortiesMois: hypo + depensesOccAn / 12,
       // indicateurs
       mrb, capRate, dscr, prixParPorte, loyerMoyenPorte, cashOnCash,
       // clôture

@@ -232,12 +232,14 @@
       const scenActifs = Object.keys(scen).filter((k) => scen[k]);
       const k = cleOverride();
 
-      if (!Object.keys(vals).length && !scenActifs.length) {
+      if (!Object.keys(vals).length && !scenActifs.length && !uniteChoisie) {
         chrome.storage.local.remove(k);
         overrideMaj = null;
       } else {
         overrideMaj = new Date().toISOString().slice(0, 10);
-        chrome.storage.local.set({ [k]: { maj: overrideMaj, vals, scen: scenActifs } });
+        chrome.storage.local.set({
+          [k]: { maj: overrideMaj, vals, scen: scenActifs, unite: uniteChoisie }
+        });
       }
       majBandeauMemoire();
     }, 400);
@@ -295,6 +297,7 @@
   // ============================================================
 
   let panel = null, inputs = {}, donnees = {};
+  let uniteChoisie = 0; // index dans la liste triee du plus grand au plus petit
   let ecritureInterne = false;
 
   // Encadre nos propres écritures DOM pour que l'observateur les ignore
@@ -419,6 +422,7 @@
       for (const k of memoire.scen) if (k in scen) scen[k] = true;
     }
     overrideMaj = memoire ? memoire.maj : null;
+    uniteChoisie = (memoire && memoire.unite) || 0;
     champsTouches = new Set(Object.keys(v));
 
     enregistrerPrix(d.prix, (hist) => {
@@ -456,6 +460,16 @@
       const replie = panel.classList.toggle("pc-collapsed");
       panel.querySelector(".pc-toggle").textContent = replie ? "+" : "–";
       chrome.storage.sync.set({ panneauReplie: replie });
+    });
+
+    // Le plus grand logement est un défaut, pas une fatalité : habiter le
+    // petit et louer le grand change complètement le coût d'habitation.
+    panel.querySelector("#pc-repartition").addEventListener("click", (e) => {
+      const b = e.target.closest(".pc-rep-u");
+      if (!b) return;
+      uniteChoisie = parseInt(b.dataset.u, 10) || 0;
+      sauverOverride();
+      rafraichir();
     });
 
     panel.querySelector("#pc-add").addEventListener("click", envoyerVersListe);
@@ -531,7 +545,8 @@
       travaux: parseMoney(inputs.travaux.value),
       miseDeFonds: parseMoney(inputs.mdf.value),
       nbUnites: donnees.nbUnites || 2,
-      unitesDetail: donnees.unitesDetail || null
+      unitesDetail: donnees.unitesDetail || null,
+      uniteOccupee: uniteChoisie
     };
   }
 
@@ -581,9 +596,10 @@
       const tailles = r.repartition.map((u) => u.taille);
       const toutesEgales = tailles.every((t) => t === tailles[0]);
       if (r.revenusLoyers && r.repartition.length > 1 && !toutesEgales) {
-        rep.innerHTML = "Loyers estimés par taille : " + r.repartition
-          .map((u) => `<span class="${u.occupe ? "pc-rep-vous" : ""}">${esc(u.libelle)} ≈ ${fmt(u.loyer)}${u.occupe ? " (vous)" : ""}</span>`)
-          .join(" · ");
+        rep.innerHTML = `<span class="pc-rep-lab">Vous habitez</span>` + r.repartition
+          .map((u, i) => `<button type="button" class="pc-rep-u${u.occupe ? " pc-rep-vous" : ""}" data-u="${i}"
+            title="Cliquez si c'est ce logement que vous occuperiez">${esc(u.libelle)} ≈ ${fmt(u.loyer)}</button>`)
+          .join("");
         rep.style.display = "";
       } else {
         rep.style.display = "none";
@@ -597,6 +613,7 @@
         <div class="pc-cell ${classeCashflow(r.cashflowMois)}">
           <b>${fmt(r.cashflowMois)}</b><span>Cashflow /mois<br>tous les logements loués</span>
         </div>
+        <div class="pc-cell"><b>${fmt(r.sortiesMois)}</b><span>Sans locataires<br>si aucun logement n'était loué</span></div>
         <div class="pc-cell"><b>${fmtPct(r.mrb, 1)}×</b><span>MRB<br>prix ÷ revenus bruts</span></div>
         <div class="pc-cell"><b>${fmtPct(r.capRate)} %</b><span>Taux de cap<br>(NOI ÷ prix)</span></div>
         <div class="pc-cell"><b>${fmt(r.hypo)}</b><span>Hypothèque /mois<br>${fmtPct(r.tauxEffectif)} % · ${r.amort} ans${scen.stress ? " · stressé" : ""}</span></div>
@@ -700,6 +717,7 @@
     champsTouches = new Set();
     overrideMaj = null;
     scen = { stress: false, mdf20: false, marche: false, invest: false };
+    uniteChoisie = 0;
   }
 
   function demarrer() {

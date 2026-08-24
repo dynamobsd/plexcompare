@@ -375,3 +375,34 @@
   border-color: #e8a13c;
   background: #fdf3e3;
 }
+
+/* Choix du logement que vous occuperiez */
+#plexcompare-panel .pc-rep-lab {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 700;
+  color: var(--pc-dim);
+  margin-right: 8px;
+}
+#plexcompare-panel .pc-rep-u {
+  font: inherit;
+  font-size: 12px;
+  background: #f5f9fb;
+  color: var(--pc-ink);
+  border: 1px solid var(--pc-line);
+  border-radius: 20px;
+  padding: 3px 11px;
+  margin: 2px 5px 2px 0;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+#plexcompare-panel .pc-rep-u:hover { border-color: var(--pc-accent); }
+#plexcompare-panel .pc-rep-u.pc-rep-vous {
+  background: var(--pc-navy);
+  color: var(--pc-accent);
+  border-color: var(--pc-navy);
+  font-weight: 700;
+  padding-left: 11px;
+}
+#plexcompare-panel .pc-rep-u.pc-rep-vous::after { content: " · vous"; font-weight: 400; opacity: .8; }

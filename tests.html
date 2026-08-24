@@ -165,6 +165,34 @@
     verifier("Cap rate = NOI ÷ prix", r.capRate, (r.noiAn / 600000) * 100, 1e-9);
     verifier("DSCR = NOI ÷ service de la dette", r.dscr, r.noiAn / (r.hypo * 12), 1e-9);
 
+    groupe("Choix du logement occupé");
+
+    const rGrand = PC.calculer({ ...fiche, uniteOccupee: 0 }, PC_DEFAULTS, {});
+    const rPetit = PC.calculer({ ...fiche, uniteOccupee: 2 }, PC_DEFAULTS, {});
+
+    vrai("Par défaut, vous occupez le plus grand", rGrand.repartition[0].occupe === true);
+    verifier("Le défaut vaut zéro", PC.calculer(fiche, PC_DEFAULTS, {}).uniteOccupee, 0);
+    vrai("Choisir le 3e logement déplace le marqueur", rPetit.repartition[2].occupe === true);
+    vrai("...et libère le plus grand", rPetit.repartition[0].occupe === false);
+    vrai("Habiter le petit coûte moins cher", rPetit.coutHabitation < rGrand.coutHabitation);
+    vrai("Habiter le petit rapporte plus de loyers", rPetit.loyersPercusMois > rGrand.loyersPercusMois);
+    verifier("Le loyer retiré est celui du logement choisi",
+      rPetit.loyerOccupe, rPetit.repartition[2].loyer, 1e-9);
+    verifier("Un index trop grand est ramené au dernier logement",
+      PC.calculer({ ...fiche, uniteOccupee: 99 }, PC_DEFAULTS, {}).uniteOccupee, 2);
+    verifier("Un index négatif est ramené à zéro",
+      PC.calculer({ ...fiche, uniteOccupee: -5 }, PC_DEFAULTS, {}).uniteOccupee, 0);
+    vrai("Le cashflow ne dépend pas du logement occupé",
+      Math.abs(rPetit.cashflowMois - rGrand.cashflowMois) < 1e-9);
+
+    groupe("Coût sans locataires");
+
+    verifier("Sorties mensuelles = hypothèque + exploitation",
+      r.sortiesMois, r.hypo + r.depensesOccAn / 12, 1e-9);
+    verifier("Coût d'habitation = sorties − loyers perçus",
+      r.coutHabitation, r.sortiesMois - r.loyersPercusMois, 1e-9);
+    vrai("Sans locataires, ça coûte plus cher qu'avec", r.sortiesMois > r.coutHabitation);
+
     groupe("Scénarios");
 
     const rInvest = PC.calculer(fiche, PC_DEFAULTS, { invest: true });
