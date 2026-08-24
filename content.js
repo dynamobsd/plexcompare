@@ -195,10 +195,12 @@
     const t = document.title + " " + chemin + " " +
       (document.querySelector("h1")?.textContent || "");
     if (!RE_PLEX.test(t)) return false;
-    // Page de détail : l'URL se termine par le numéro d'inscription,
-    // ou la page expose le bloc de prix d'une fiche.
+    // Page de détail : l'URL se termine par le numéro d'inscription, ou la
+    // page expose le bloc de prix d'une fiche. On ne se fie surtout pas à
+    // [itemprop=price] : les vignettes d'une page de résultats en portent
+    // aussi, ce qui ferait apparaître le panneau sur une liste.
     return /\/\d{6,}\/?$/.test(chemin) ||
-      !!document.querySelector("#BuyPrice, .price-container, [itemprop='price']");
+      !!document.querySelector("#BuyPrice, .price-container");
   }
 
   // ============================================================
