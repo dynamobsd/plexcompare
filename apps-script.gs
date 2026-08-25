@@ -6,6 +6,8 @@
  *    avec ta conjointe (accès Éditeur).
  * 2. Dans le Sheet : Extensions → Apps Script.
  * 3. Efface le contenu, colle TOUT ce fichier, puis Enregistrer.
+ *    → Si tu as créé le projet depuis script.google.com au lieu du
+ *      menu Extensions, remplis ID_FEUILLE juste en dessous.
  * 4. Déployer → Nouveau déploiement → type « Application Web » :
  *      - Exécuter en tant que : Moi
  *      - Qui a accès : Tout le monde
@@ -19,6 +21,19 @@
  *   Déployer → Gérer les déploiements → ✏️ Modifier
  *   → Version « Nouvelle version » → Déployer.
  */
+
+/**
+ * Identifiant du Google Sheet à alimenter.
+ *
+ * Laisse vide si ce script a été créé depuis le Sheet lui-même
+ * (Extensions → Apps Script) : il trouvera le classeur tout seul.
+ *
+ * Remplis-le si le script est un projet indépendant. L'identifiant est
+ * dans l'adresse de ton Sheet, entre /d/ et /edit :
+ *   https://docs.google.com/spreadsheets/d/AbC123...XyZ/edit
+ *                                          ^^^^^^^^^^^^^ celui-là
+ */
+const ID_FEUILLE = "";
 
 const ENTETES = [
   "Date", "Adresse", "Lien Centris", "Prix", "Unités",
@@ -42,8 +57,32 @@ function json_(obj) {
 
 // ---------- Feuille ----------
 
+// Un projet Apps Script créé hors du Sheet n'a pas de « classeur actif » :
+// getActiveSpreadsheet() renvoie null et tout casse plus loin. On ouvre
+// alors le classeur par son identifiant.
+function classeur_() {
+  if (ID_FEUILLE) {
+    try {
+      return SpreadsheetApp.openById(ID_FEUILLE);
+    } catch (err) {
+      throw new Error(
+        "ID_FEUILLE ne correspond à aucun Sheet accessible : " + ID_FEUILLE
+      );
+    }
+  }
+  const actif = SpreadsheetApp.getActiveSpreadsheet();
+  if (!actif) {
+    throw new Error(
+      "Ce script n'est rattaché à aucun Sheet. Ouvre le fichier apps-script.gs, " +
+      "colle l'identifiant de ton classeur dans ID_FEUILLE (en haut), " +
+      "enregistre, puis redéploie une nouvelle version."
+    );
+  }
+  return actif;
+}
+
 function feuille_() {
-  const f = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+  const f = classeur_().getSheets()[0];
   if (f.getLastRow() === 0) {
     f.appendRow(ENTETES);
     f.getRange(1, 1, 1, ENTETES.length)
