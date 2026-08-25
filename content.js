@@ -757,24 +757,61 @@
   //  Badges MRB sur les résultats de recherche
   // ============================================================
 
+  // Une vignette de résultats contient déjà tout le nécessaire : le prix en
+  // clair dans une balise meta, et les revenus dans le libellé abrégé
+  // « Rev. bruts pot. : 33 540 $ ». L'ancienne expression cherchait
+  // « Revenus bruts » en toutes lettres et ne trouvait donc jamais rien.
+  const RE_REVENUS_VIGNETTE =
+    /rev(?:enus?)?\.?\s*bruts?\.?\s*(?:pot(?:entiels?)?\.?)?\s*:?\s*([\d\s\u00a0\u202f]+)\s*\$/i;
+
   function poserBadges() {
-    const cartes = document.querySelectorAll(".property-thumbnail-item, .shell, .thumbnailItem");
-    cartes.forEach((carte) => {
-      if (carte.dataset.pcBadge) return;
-      const txt = carte.textContent || "";
-      if (!RE_PLEX.test(txt)) return;
-      const prixEl = carte.querySelector(".price, [itemprop='price']");
-      const prix = prixEl ? parseMoney(prixEl.getAttribute("content") || prixEl.textContent) : null;
-      const mRev = txt.match(/revenus?\s+bruts?[^\d]*([\d\s]+)\s*\$/i);
-      const rev = mRev ? parseMoney(mRev[1]) : null;
-      if (!prix || !rev) return;
-      const mrb = prix / rev;
-      const badge = document.createElement("span");
-      badge.className = "pc-badge " + (mrb <= 15 ? "pc-good" : mrb <= 19 ? "pc-mid" : "pc-bad");
-      badge.textContent = "MRB " + mrb.toFixed(1) + "×";
-      ecrire(() => { (prixEl?.parentElement || carte).appendChild(badge); });
+    // Un seul sélecteur : .shell et .thumbnailItem désignent la même vignette
+    // ou son enfant direct, les cumuler posait deux badges par propriété.
+    for (const carte of document.querySelectorAll(".property-thumbnail-item")) {
+      if (carte.dataset.pcBadge) continue;
       carte.dataset.pcBadge = "1";
-    });
+
+      const txt = (carte.textContent || "").replace(/\s+/g, " ");
+      const m = txt.match(RE_REVENUS_VIGNETTE);
+      const revenus = m ? parseMoney(m[1]) : null;
+
+      const prixEl = carte.querySelector("[itemprop='price'], .price");
+      const prix = prixEl
+        ? parseMoney(prixEl.getAttribute("content") || prixEl.textContent)
+        : null;
+      if (!prix || !revenus) continue;
+
+      const categorie = carte.querySelector(".category")?.textContent || txt;
+      let nbUnites = null;
+      for (const [re, n] of MOTS_UNITES) if (re.test(categorie)) { nbUnites = n; break; }
+
+      const mrb = prix / revenus;
+      const cls = mrb <= 15 ? "pc-good" : mrb <= 19 ? "pc-mid" : "pc-bad";
+
+      // On ne montre que ce qui se déduit de la vignette elle-même : aucune
+      // hypothèse de taux ni de taxes ne se cache derrière ces chiffres.
+      const details = [];
+      if (nbUnites) {
+        details.push(fmt(revenus / 12 / nbUnites) + " /porte /mois");
+        details.push(Math.round(prix / nbUnites / 1000) + " k$ /porte");
+      }
+
+      const bloc = document.createElement("div");
+      bloc.className = "pc-vignette";
+      bloc.innerHTML =
+        `<span class="pc-v-mrb ${cls}">MRB ${fmtPct(mrb, 1)}×</span>` +
+        (details.length ? `<span class="pc-v-detail">${esc(details.join(" · "))}</span>` : "");
+
+      // Vérifié sur une page de résultats réelle : le badge se place sous le
+      // prix, juste au-dessus du type de propriété. Les deux autres ancres
+      // sont des replis si Centris renomme ses classes.
+      const ancre = carte.querySelector(".price-section") ||
+        carte.querySelector(".features") || carte.querySelector(".description");
+      ecrire(() => {
+        if (ancre) ancre.insertAdjacentElement("afterend", bloc);
+        else carte.appendChild(bloc);
+      });
+    }
   }
 
   // ============================================================

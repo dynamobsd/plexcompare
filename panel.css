@@ -461,3 +461,31 @@
 #plexcompare-panel .pc-c-vous { background: #fbf6ee; }
 #plexcompare-panel .pc-c-doute .pc-c-mt { color: var(--pc-amber); }
 #plexcompare-panel .pc-c-doute .pc-c-note::after { content: " — à vérifier"; }
+
+/* Évaluation directe sur les vignettes de résultats */
+.pc-vignette {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 6px 0 2px;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+}
+.pc-vignette .pc-v-mrb {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  background: #0f2231;
+  white-space: nowrap;
+}
+.pc-vignette .pc-v-mrb.pc-good { color: #5fd39a; }
+.pc-vignette .pc-v-mrb.pc-mid  { color: #ffd08a; }
+.pc-vignette .pc-v-mrb.pc-bad  { color: #ff8d7e; }
+.pc-vignette .pc-v-detail {
+  font-size: 11.5px;
+  color: #5f7683;
+}
