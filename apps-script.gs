@@ -25,11 +25,20 @@
 /**
  * Identifiant du Google Sheet à alimenter.
  *
- * Laisse vide si ce script a été créé depuis le Sheet lui-même
- * (Extensions → Apps Script) : il trouvera le classeur tout seul.
+ * Le script le cherche à trois endroits, dans cet ordre :
  *
- * Remplis-le si le script est un projet indépendant. L'identifiant est
- * dans l'adresse de ton Sheet, entre /d/ et /edit :
+ *   1. La propriété de script « ID_FEUILLE »  ← recommandé
+ *      Apps Script → ⚙️ Paramètres du projet → Propriétés du script
+ *      → Ajouter : nom « ID_FEUILLE », valeur = l'identifiant.
+ *      Il reste privé : ce fichier peut être partagé sans rien révéler.
+ *
+ *   2. La constante ci-dessous, si tu préfères aller au plus vite.
+ *      N'oublie pas qu'elle voyage avec le fichier.
+ *
+ *   3. Le classeur auquel le script est rattaché, si tu l'as créé
+ *      depuis le Sheet lui-même (Extensions → Apps Script).
+ *
+ * L'identifiant est dans l'adresse de ton Sheet, entre /d/ et /edit :
  *   https://docs.google.com/spreadsheets/d/AbC123...XyZ/edit
  *                                          ^^^^^^^^^^^^^ celui-là
  */
@@ -61,21 +70,30 @@ function json_(obj) {
 // getActiveSpreadsheet() renvoie null et tout casse plus loin. On ouvre
 // alors le classeur par son identifiant.
 function classeur_() {
-  if (ID_FEUILLE) {
+  let id = ID_FEUILLE;
+  try {
+    id = PropertiesService.getScriptProperties().getProperty("ID_FEUILLE") || id;
+  } catch (err) {
+    // Propriétés indisponibles : on se rabat sur la constante.
+  }
+
+  if (id) {
     try {
-      return SpreadsheetApp.openById(ID_FEUILLE);
+      return SpreadsheetApp.openById(id);
     } catch (err) {
       throw new Error(
-        "ID_FEUILLE ne correspond à aucun Sheet accessible : " + ID_FEUILLE
+        "Aucun Sheet accessible avec cet identifiant : " + id +
+        " — vérifie qu'il est exact et que ton compte y a accès."
       );
     }
   }
+
   const actif = SpreadsheetApp.getActiveSpreadsheet();
   if (!actif) {
     throw new Error(
-      "Ce script n'est rattaché à aucun Sheet. Ouvre le fichier apps-script.gs, " +
-      "colle l'identifiant de ton classeur dans ID_FEUILLE (en haut), " +
-      "enregistre, puis redéploie une nouvelle version."
+      "Ce script n'est rattaché à aucun Sheet. Va dans ⚙️ Paramètres du projet " +
+      "→ Propriétés du script, ajoute « ID_FEUILLE » avec l'identifiant de ton " +
+      "classeur, enregistre, puis redéploie une nouvelle version."
     );
   }
   return actif;
